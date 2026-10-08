@@ -98,6 +98,31 @@ def main():
         endpoint.bind(('127.0.0.1',0))
         check(endpoint.getsockname()[1] in udp_ports(os.getpid()),'actual current-process UDP table ownership')
     check(replay_destination([6112],[6112])=='127.255.255.255' and replay_destination([6113],[6112])=='127.0.0.1','local duplicate-receiver discovery destination')
+    import importlib.util
+    example_path=ROOT/'examples/demo_batch.py'
+    spec=importlib.util.spec_from_file_location('demo_batch_example',example_path)
+    example=importlib.util.module_from_spec(spec);spec.loader.exec_module(example)
+    class DemoClient:
+        def __init__(self):self.gold=0;self.rewards=0;self.deaths=0;self.live=0;self.cache={}
+        def request(self,op,args=None,request_id=None):
+            replay=request_id is not None and request_id in self.cache
+            if replay:return dict(self.cache[request_id],replayed=True),1
+            if op=='prepare':self.live=2
+            if op=='order':self.rewards+=1;self.deaths+=1;self.gold+=50
+            if op=='reset':self.live=0
+            state={'actor':{'exists':self.live>0},'target':{'exists':self.live>0},'order_accepted':op=='order',
+                'rewards':self.rewards,'deaths':self.deaths,'gold':self.gold,'live_test_units':self.live,'active_death_triggers':int(self.live>0)}
+            reply={'id':request_id or op,'ok':True,'replayed':False,'result':state}
+            if request_id:self.cache[request_id]=reply
+            return reply,1
+    with patch.object(bridge,'Client',return_value=DemoClient()):
+        report={'trace':[],'checks':[]};ctx=example.Context({},report,lambda:None)
+        example.attack_reward(ctx)
+        check(len(report['checks'])==5,'generic demo adapter exercises reward replay and reset contract')
+    with patch.object(bridge,'shutdown',return_value={'ok':True,'status':'closed'}) as closer:
+        with tempfile.TemporaryDirectory() as scratch:
+            path=Path(scratch)/'session.json';path.write_text('{}',encoding='utf8')
+            check(example.shutdown(path)['ok'] and closer.call_count==1,'generic adapter delegates owned cleanup')
     result={'passed':True,'checks':checks,'scope':'Pure source/protocol/CLI lifecycle checks; no new-environment game proof'}
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return result

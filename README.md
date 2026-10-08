@@ -1,31 +1,44 @@
 # Warcraft III 命令桥
 
-给朋友的 AI 助手：先读 [AI_HANDOFF.md](AI_HANDOFF.md)。这是可配置的源码起点；换项目和机器后须建立自己的运行证据。
+通过固定命令驱动真实游戏逻辑，读取状态并自动判断测试结果，减少重复启动、手动操作和等待。适用于 Warcraft III 地图的快速复现与行为回归。
 
-包内包含单人演示运行器、JSON 文件协议、原生进程创建方、固定窗口消息启动、后台采样、LAN 发现与互斥，以及单人/双人项目适配示例。共享技能位于 `skills/war3-testing`。不包含地图、游戏资产、依赖 DLL、编译后的宿主、凭据或个人记忆。
+## 两种使用方式
 
-## 配置与最短演示
+| 目标 | 入口 |
+|---|---|
+| 先确认本机通道可用 | 配置并运行随包单人演示 |
+| 测试自己的地图 | 按[接入指南](docs/INTEGRATION.md)实现固定业务操作和观测字段 |
 
-支持已验证的 Windows / Python 3.10+ / War3 1.27a 与对应 KKWE 布局。复制 `runtime/config.example.json` 为 `runtime/config.json`，填本机 KKWE 根、游戏根和独立演示模板。模板必须是授权的测试模板，W3I v25、Player(0) 单真人；不要把正式项目地图当演示模板。KKWE 根应包含 bin、plugin、share；tools 可空，项目已有门禁仍须执行。
+当前运行器针对 **Windows、Python 3.10+、War3 1.27a 与兼容 KKWE**。其他版本须另行适配；同一接口名称不代表运行行为一致。
+
+## 快速开始
+
+1. 将 `runtime/config.example.json` 复制为 `runtime/config.json`，填写自己的 KKWE、游戏和独立演示模板路径。
+2. 运行源码检查与环境诊断。
+3. 在已获地图副本写入、游戏启动授权后运行演示。
 
 ```powershell
 python -X utf8 -B check_kit.py
 python -X utf8 -B runtime/war3_bridge.py doctor
 python -X utf8 -B runtime/war3_bridge.py build-demo --i-confirm-map-write
 python -X utf8 -B runtime/war3_bridge.py launch --mode lan --i-confirm-map-write --i-confirm-game-launch
-python -X utf8 -B runtime/war3_bridge.py run --require-background
+python -X utf8 -B runtime/war3_bridge.py run
 ```
 
-只有用户已允许地图副本写入与游戏启动后才添加确认标志。宿主从 C# 源码本机编译。run 成功或失败均关闭所属游戏和主机；只有明确要求留看才使用 `--keep-open`。单条 request 的交互会话结束后执行 shutdown。不关闭编辑器或他人游戏。
+演示模板须为 W3I v25、Player(0) 单真人的独立测试模板；演示会替换副本中的运行脚本，不能使用正式地图充当模板。`run` 成功或失败均关闭所属游戏和主机。临时保留观看才使用 `--keep-open`，结束后执行 `shutdown`。
 
-启动只向原生创建方验证过的 War3 窗口发送固定消息，不使用全局键鼠、坐标、截图或 Computer Use。最小化条件由独立采样证明；启动仍需要可交互桌面，不能据此宣称锁屏可启动。file_view 默认为 native，只有核实兼容插件并复现大图视图差异后才选 kkwe_8m。
+`file_view` 默认 `native`。仅确认实际兼容插件与大图文件视图差异后选择 `kkwe_8m`；不要为了通过检查删除门禁或修改正式资源。
 
-## 项目接入与双客户端
+## 接入与查阅
 
-`reference/project_adapter` 展示正式业务入口、只读快照、有限批次、同步请求、去重和及时收尾。其源码路径、控件编号、成长字段及构建工具属于原项目，必须按自己的工程改写。`multiplayer.py` 是两个真人、槽位0/1的参考启动与流程用例，要求 fresh session/IPC、已校验候选图和两项授权标志；它不自动制作你项目的测试图，也不证明四客户端。
+- [接入自己的地图](docs/INTEGRATION.md)：业务边界、适配器与最小示例。
+- [文件协议](docs/PROTOCOL.md)：会话身份、固定操作、去重与错误处理。
+- [多人接入](docs/MULTIPLAYER.md)：实例隔离、发现端口和同步验证。
+- [故障排查](docs/TROUBLESHOOTING.md)：按启动阶段定位失败。
+- [验证范围](VALIDATION.md)：已经证明的能力与迁移后需要重测的部分。
+- [可选视频播放经验](docs/war3-video-mix-lessons.md)：MIX 分发、进程隔离与媒体生命周期；仅提供经验，不含视频插件。
+- [给 AI 助手](AI_HANDOFF.md)：推荐工作顺序。
 
-通用演示只支持单人。多人本地快照不得创建或销毁世界句柄、推进随机源；从 Lua 调用固定 JASS 入口使用已核对的 jass.code。主机 desync 告警独立于可见状态断言。实测范围见 [VALIDATION.md](VALIDATION.md)，复用经验见 [LESSONS.md](LESSONS.md)。
+`runtime` 提供单人演示及通用基础组件；`examples/demo_batch.py` 是可运行的批次适配示例；`skills/war3-testing` 可独立安装为技能。包内不含任何特定地图的控件编号、养成系统、关卡流程或构建入口。
 
-## 可选视频播放经验
-
-[War3 视频 MIX 分发与 LAN 测试经验](docs/war3-video-mix-lessons.md)记录单文件包、进程隔离、指定玩家播放与停止、音频生命周期和编辑器宿主过滤。该文档是独立视频项目的经验总结；本命令桥仓库未包含视频插件实现或播放器发行包。实机与夹具证据、未验证平台及保存卡住问题的复测边界均单独说明。
+固定窗口消息只操作已验证的所属 War3 窗口，无需 Computer Use、全局键鼠或坐标截图。后台行为、最小化、视听与真实鼠标命中分别验证。组件许可与不包含的内容见 [NOTICE.md](NOTICE.md)。

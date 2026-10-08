@@ -26,7 +26,7 @@ CONFIG_PATH=ROOT / 'config.json'
 CONFIG=json.loads(CONFIG_PATH.read_text(encoding='utf8')) if CONFIG_PATH.exists() else {}
 KKWE=Path(os.environ.get('WAR3_BRIDGE_KKWE') or CONFIG.get('kkwe') or ROOT/'UNCONFIGURED_KKWE')
 TOOLS=Path(os.environ.get('WAR3_BRIDGE_TOOLS') or CONFIG.get('tools') or ROOT/'optional-tools')
-TEMPLATE=Path(os.environ.get('WAR3_BRIDGE_TEMPLATE') or CONFIG.get('template') or KKWE/'example(演示地图)'/'综合——UI测试地图1.19.w3x')
+TEMPLATE=Path(os.environ.get('WAR3_BRIDGE_TEMPLATE') or CONFIG.get('template') or ROOT/'UNCONFIGURED_TEMPLATE.w3x')
 SCRATCH=ROOT/'work'
 if CONFIG.get('game') and not os.environ.get('WAR3_BRIDGE_GAME'):
     os.environ['WAR3_BRIDGE_GAME']=CONFIG['game']
