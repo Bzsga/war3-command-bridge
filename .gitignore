@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+runtime/config.json
+runtime/work/
+*.exe
+*.dll
+*.w3x
+*.w3m

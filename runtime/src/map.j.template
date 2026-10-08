@@ -1,0 +1,168 @@
+native EXExecuteScript takes string script returns string
+
+globals
+    integer WB_Protocol = 1
+    integer WB_Action = 0
+    integer WB_Deaths = 0
+    integer WB_Rewards = 0
+    integer WB_LiveUnits = 0
+    integer WB_Round = 0
+    integer WB_ObservedUnits = 0
+    integer WB_TriggersCreated = 0
+    integer WB_TriggersDestroyed = 0
+    real WB_GameSeconds = 0.0
+    boolean WB_OrderOK = false
+    unit WB_Actor = null
+    unit WB_Target = null
+    trigger WB_DeathTrigger = null
+    timer WB_BridgeTimer = null
+    string WB_LastError = ""
+endglobals
+
+function WB_Mark takes string stage, string message returns nothing
+    call PreloadGenClear()
+    call PreloadGenStart()
+    call Preload(message)
+    call PreloadGenEnd("Logs\\WB-__BUILD_TEXT__-" + stage + ".pld")
+endfunction
+
+function WB_OnDeath takes nothing returns nothing
+    if GetTriggerUnit() == WB_Target then
+        set WB_Deaths = WB_Deaths + 1
+        set WB_LiveUnits = WB_LiveUnits - 1
+        if WB_Rewards == 0 then
+            set WB_Rewards = 1
+            call SetPlayerState(Player(0), PLAYER_STATE_RESOURCE_GOLD, GetPlayerState(Player(0), PLAYER_STATE_RESOURCE_GOLD) + 100)
+        endif
+    endif
+endfunction
+
+function WB_Reset takes nothing returns nothing
+    if WB_DeathTrigger != null then
+        call DestroyTrigger(WB_DeathTrigger)
+        set WB_TriggersDestroyed = WB_TriggersDestroyed + 1
+        set WB_DeathTrigger = null
+    endif
+    if WB_Actor != null then
+        call RemoveUnit(WB_Actor)
+        set WB_Actor = null
+    endif
+    if WB_Target != null then
+        call RemoveUnit(WB_Target)
+        set WB_Target = null
+    endif
+    set WB_Deaths = 0
+    set WB_Rewards = 0
+    set WB_LiveUnits = 0
+    set WB_OrderOK = false
+    call SetPlayerState(Player(0), PLAYER_STATE_RESOURCE_GOLD, 0)
+endfunction
+
+function WB_Prepare takes nothing returns nothing
+    call WB_Reset()
+    set WB_Round = WB_Round + 1
+    set WB_Actor = CreateUnit(Player(0), 'Hpal', -448.0, -512.0, 0.0)
+    call PauseUnit(WB_Actor, true)
+    set WB_Target = CreateUnit(Player(PLAYER_NEUTRAL_AGGRESSIVE), 'hfoo', -320.0, -512.0, 180.0)
+    call SetUnitState(WB_Target, UNIT_STATE_LIFE, 40.0)
+    call PauseUnit(WB_Target, true)
+    set WB_LiveUnits = 2
+    set WB_DeathTrigger = CreateTrigger()
+    set WB_TriggersCreated = WB_TriggersCreated + 1
+    call TriggerRegisterUnitEvent(WB_DeathTrigger, WB_Target, EVENT_UNIT_DEATH)
+    call TriggerAddAction(WB_DeathTrigger, function WB_OnDeath)
+endfunction
+
+function WB_Dispatch takes nothing returns nothing
+    if WB_Action == 1 then
+        call WB_Prepare()
+    elseif WB_Action == 2 then
+        call PauseUnit(WB_Actor, false)
+        set WB_OrderOK = IssueTargetOrder(WB_Actor, "attack", WB_Target)
+    elseif WB_Action == 3 then
+        call WB_Reset()
+    endif
+endfunction
+
+function WB_Observe takes nothing returns nothing
+    local group units = CreateGroup()
+    local unit current = null
+    set WB_ObservedUnits = 0
+    call GroupEnumUnitsInRect(units, bj_mapInitialPlayableArea, null)
+    loop
+        set current = FirstOfGroup(units)
+        exitwhen current == null
+        set WB_ObservedUnits = WB_ObservedUnits + 1
+        call GroupRemoveUnit(units, current)
+    endloop
+    call DestroyGroup(units)
+    set units = null
+    set current = null
+endfunction
+
+function WB_Tick takes nothing returns nothing
+    set WB_GameSeconds = WB_GameSeconds + 0.05
+    set WB_LastError = EXExecuteScript("WB_Bridge.tick()")
+    if SubString(WB_LastError, 0, 17) == "bridge_tick_error" then
+        call DisplayTextToPlayer(Player(0), 0.0, 0.0, WB_LastError)
+    endif
+endfunction
+
+function WB_Init takes nothing returns nothing
+    local integer i = 0
+    local integer humans = 0
+    call DestroyTimer(GetExpiredTimer())
+    call WB_Mark("init", "WB init entered")
+    loop
+        exitwhen i >= 12
+        if GetPlayerController(Player(i)) == MAP_CONTROL_USER and GetPlayerSlotState(Player(i)) == PLAYER_SLOT_STATE_PLAYING then
+            set humans = humans + 1
+        endif
+        set i = i + 1
+    endloop
+    if humans != 1 then
+        call DisplayTextToPlayer(Player(0), 0.0, 0.0, "WB: local single-player only")
+        return
+    endif
+    call WB_Mark("before-ex", "WB before EXExecuteScript")
+    set WB_LastError = EXExecuteScript("'tiny_ok'")
+    call WB_Mark("tiny-ex", "WB tiny result: " + WB_LastError)
+__IO_PROBE__
+__BOOTSTRAP__
+    call WB_Mark("bootstrap", "WB result: " + WB_LastError)
+    call DisplayTextToPlayer(Player(0), 0.0, 0.0, "WB bootstrap: " + WB_LastError)
+    if WB_LastError == "ready" then
+        set WB_BridgeTimer = CreateTimer()
+        call TimerStart(WB_BridgeTimer, 0.05, true, function WB_Tick)
+    endif
+endfunction
+
+function main takes nothing returns nothing
+    local timer init = CreateTimer()
+    call WB_Mark("main", "WB main entered __BUILD_TEXT__")
+    call SetCameraBounds(-3584.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), -4096.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM), 4352.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), 3584.0 - GetCameraMargin(CAMERA_MARGIN_TOP), -3584.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), 3584.0 - GetCameraMargin(CAMERA_MARGIN_TOP), 4352.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), -4096.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM))
+    call SetDayNightModels("Environment\\DNC\\DNCLordaeron\\DNCLordaeronTerrain\\DNCLordaeronTerrain.mdl", "Environment\\DNC\\DNCLordaeron\\DNCLordaeronUnit\\DNCLordaeronUnit.mdl")
+    call InitBlizzard()
+    call SetPlayerState(Player(PLAYER_NEUTRAL_AGGRESSIVE), PLAYER_STATE_GIVES_BOUNTY, 0)
+    call SetPlayerAlliance(Player(0), Player(PLAYER_NEUTRAL_AGGRESSIVE), ALLIANCE_PASSIVE, false)
+    call SetPlayerAlliance(Player(PLAYER_NEUTRAL_AGGRESSIVE), Player(0), ALLIANCE_PASSIVE, false)
+    call PanCameraTo(-448.0, -512.0)
+    call TimerStart(init, 0.1, false, function WB_Init)
+    set init = null
+endfunction
+
+function config takes nothing returns nothing
+    call SetMapName("War3 Test Bridge __BUILD_TEXT__")
+    call SetMapDescription("Local automation prototype; independent test map")
+    call SetPlayers(1)
+    call SetTeams(1)
+    call SetGamePlacement(MAP_PLACEMENT_USE_MAP_SETTINGS)
+    call DefineStartLocation(0, -448.0, -512.0)
+    call SetPlayerStartLocation(Player(0), 0)
+    call SetPlayerColor(Player(0), ConvertPlayerColor(0))
+    call SetPlayerRacePreference(Player(0), RACE_PREF_HUMAN)
+    call SetPlayerRaceSelectable(Player(0), false)
+    call SetPlayerController(Player(0), MAP_CONTROL_USER)
+    call SetPlayerTeam(Player(0), 0)
+    call SetPlayerSlotAvailable(Player(0), MAP_CONTROL_USER)
+endfunction
