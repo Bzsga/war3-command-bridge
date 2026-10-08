@@ -10,9 +10,31 @@ BOUNDARY='Live project logic. Reward and camp entry follow natural first battle;
 class Context:
     def __init__(self,session_path,report,persist,client=None):
         self.path=session_path;self.session=json.loads(session_path.read_text(encoding='utf8'))
+        from session_lifecycle import require_attachable
+        require_attachable(self.session)
         self.report=report;self.persist=persist;self.counter=0
         self.client=client or shared_module(Path(self.session['shared_bridge'])).Client(self.session)
         self.acquired=None
+        self.condition_probe=None
+        if self.session.get('required_condition')=='minimized':
+            from background_probe import BackgroundProbe
+            launch=json.loads((Path(self.session['folder'])/'launch.json').read_text(encoding='utf8'))
+            if not launch.get('process_identity_verified'):raise RuntimeError('Cannot minimize an unverified game identity')
+            pid=launch['game_identity']['pid'];finder=BackgroundProbe(pid)
+            try:
+                owner=Path(self.session['ipc']);request_id=self.report['batch']+'-minimize'
+                (owner/'window.minimize').write_text(request_id,encoding='ascii')
+                deadline=time.monotonic()+5
+                while True:
+                    reply=owner/'window-minimize-result.json'
+                    receipt=json.loads(reply.read_text()) if reply.exists() else None
+                    if receipt and receipt.get('id')==request_id:
+                        if not receipt.get('ok') or receipt.get('pid')!=pid:raise RuntimeError('Native owner rejected minimize: '+json.dumps(receipt))
+                        if finder.samples[-1]['minimized'] and not finder.samples[-1]['game_foreground']:break
+                    if time.monotonic()>=deadline:raise RuntimeError('Owned game did not enter minimized/nonforeground condition')
+                    time.sleep(.05)
+            finally:finder.finish()
+            self.condition_probe=BackgroundProbe(pid)
     def request(self,op,args=None,rid=None):
         self.counter+=1;rid=rid or self.report['batch']+'-'+str(self.counter)
         response,elapsed=self.client.request(op,args,request_id=rid)
@@ -44,11 +66,23 @@ class Context:
         control=next((i for i in choices[page] if i in state['controls']),None)
         if control is None:raise AssertionError('no page navigation control to '+str(page))
         self.activate(control);return self.wait(lambda s:s['page']==page)
-    def finish(self):return {'bounded_cases':True,'global_reset_used':False,'startups':1}
+    def finish(self):
+        conditions={'bounded_cases':True,'global_reset_used':False,'startups':1}
+        if self.condition_probe:
+            observation=self.condition_probe.finish()
+            target=Path(self.session['folder'])/(self.report['batch']+'-minimized.json')
+            target.write_text(json.dumps(observation,indent=2),encoding='utf8')
+            summary={k:v for k,v in observation.items() if k!='samples'}
+            self.report['condition_evidence']=str(target);self.persist()
+            valid=observation['sample_count']>1 and observation['minimized_samples']==observation['sample_count'] and not any(observation[k] for k in ['foreground_samples','unknown_foreground_samples','missing_window_samples','errors'])
+            conditions['minimized']=summary
+            if not valid:raise AssertionError('Minimized condition was not maintained; business evidence retained separately')
+        return conditions
 
 def open_context(path,report,persist):return Context(path,report,persist)
 def shutdown(path):
-    s=json.loads(path.read_text(encoding='utf8'));return shared_module(Path(s['shared_bridge'])).shutdown(s)
+    from session_lifecycle import cleanup_owned
+    s=json.loads(path.read_text(encoding='utf8'));return cleanup_owned(s,shared_module(Path(s['shared_bridge'])).shutdown)
 
 def reward(ctx):
     state=ctx.snapshot()

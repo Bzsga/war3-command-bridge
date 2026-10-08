@@ -30,10 +30,11 @@ assert(base,'file_io_probe_failed: no working path encoding')
 write(base..'/bootstrap.json',json.encode({session=session,build=build,stage='file_io_ready',path_encoding=encoding}))
 local jass=require 'jass.common'
 local g=require 'jass.globals'
+local code=require 'jass.code'
 assert(g.WB_Protocol==1,'JASS globals unavailable')
 local last_seq, ticks, cache = '',0,{}
 local function snapshot()
-    jass.ExecuteFunc('WB_Observe')
+    code.WB_Observe()
     local function unit(u)
         if u==nil or u==0 or jass.GetUnitTypeId(u)==0 then return {exists=false} end
         return {exists=true,type_id=jass.GetUnitTypeId(u),handle_id=jass.GetHandleId(u),life=jass.GetUnitState(u,jass.UNIT_STATE_LIFE),x=jass.GetUnitX(u),y=jass.GetUnitY(u),order=jass.GetUnitCurrentOrder(u),paused=jass.IsUnitPaused(u)}
@@ -60,7 +61,7 @@ local function execute(req)
     end
     if actions[req.op] then
         g.WB_Action=actions[req.op]
-        jass.ExecuteFunc('WB_Dispatch')
+        code.WB_Dispatch()
     end
     local response={ok=true,id=req.id,session=session,build=build,result=snapshot(),replayed=false}
     cache[req.id]={fingerprint=fingerprint,response=response}

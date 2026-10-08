@@ -26,7 +26,7 @@ def run(adapter,session_path,cases,out,keep_open=False):
             'boundary':adapter.BOUNDARY}
     def persist():
         (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
-    ctx=None;started=time.perf_counter();cleanup_ok=keep_open
+    ctx=None;started=time.perf_counter();cleanup_ok=keep_open;row=None;start=None
     try:
         ctx=adapter.open_context(session_path,report,persist)
         for name in cases:
@@ -36,15 +36,23 @@ def run(adapter,session_path,cases,out,keep_open=False):
         report['passed']=True
     except Exception as exc:
         report['error']=str(exc);report['traceback']=traceback.format_exc();report['failure_case']=report['cases'][-1]['name'] if report['cases'] else 'open_context'
+        report['failure_stage']=getattr(exc,'stage','case' if row is not None else 'attach')
+        if row is not None:row['elapsed_seconds']=time.perf_counter()-start
     finally:
+        report['business_passed']=report['passed']
+        report['conditions_passed']=None
         if ctx is not None and hasattr(ctx,'finish'):
-            try:report['conditions']=ctx.finish()
-            except Exception as exc:report['condition_error']=str(exc);report['passed']=False
+            try:report['conditions']=ctx.finish();report['conditions_passed']=True
+            except Exception as exc:
+                report['condition_error']=str(exc);report['conditions_passed']=False;report['passed']=False;report.setdefault('failure_stage','observation')
+        report['cleanup_status']='retained' if keep_open else 'failed'
         if not keep_open:
             try:
                 report['shutdown']=adapter.shutdown(session_path);cleanup_ok=report['shutdown'].get('ok',False)
+                report['cleanup_status']=report['shutdown'].get('status','closed' if cleanup_ok else 'failed')
             except Exception as exc:report['shutdown_error']=str(exc)
         report['cleanup_ok']=cleanup_ok;report['passed']=report['passed'] and cleanup_ok
+        if report['business_passed'] and not cleanup_ok:report.setdefault('failure_stage','cleanup')
         report['elapsed_seconds']=time.perf_counter()-started;persist()
     print(json.dumps({'passed':report['passed'],'cases':len(report['cases']),'checks':len(report['checks']),'cleanup_ok':cleanup_ok,'report':str(out/'report.json')},ensure_ascii=False),flush=True)
     return report

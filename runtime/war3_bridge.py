@@ -161,7 +161,7 @@ def build_demo(probe_only=False):
         preflight={'ok':True,'scope':'Standalone bundled demo: doctor component checks; packer performs member readback. Existing project gates still apply.'}
     host_source=ROOT / "src/KkweLuaHost.cs";host=ROOT / "KkweLuaHost.exe"
     if not host.exists() or host.stat().st_mtime<host_source.stat().st_mtime:
-        run_checked([r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe","/nologo","/platform:x86","/out:"+str(host),host_source])
+        run_checked([Path(os.environ.get("WINDIR",r"C:\Windows"))/"Microsoft.NET/Framework/v4.0.30319/csc.exe","/nologo","/platform:x86","/out:"+str(host),host_source])
     session = uuid.uuid4().hex
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     folder = ROOT / "runs" / f"{stamp}-{session[:8]}"
@@ -276,7 +276,7 @@ def _launch(session, mode):
     # Classic arguments must precede loader-only arguments. In 1.27a an
     # unknown leading -auto causes the later -window to be ignored.
     route='' if mode=="lan" else ' -loadfile "'+session["launch_map"]+'"'
-    game_command='"'+str(game/"war3.exe")+'" -window'+route+' -kkwe "'+str(KKWE)+'"'+(' -auto' if mode=="lan" else '')
+    game_command='"'+str(game/"war3.exe")+'" -window'+route+' -kkwe "'+str(KKWE)+'"'
     command=[str(ROOT/"KkweLuaHost.exe"),str(KKWE/"bin"),str(ROOT/"src/kkwe_launcher.lua"),str(game),game_command,str(KKWE/"plugin/warcraft3/yd_loader.dll"),str(ipc)]
     # The loader creates the game. It is not the process later terminated by shutdown.
     log=(folder/"launcher.log").open("wb");errors=(folder/"launcher-errors.log").open("wb")
@@ -576,7 +576,7 @@ def run_suite(session, require_background=False, require_minimized=False):
     return report
 
 
-def shutdown(session):
+def shutdown_native(session):
     folder=Path(session["folder"]); ipc=Path(session["ipc"])
     launch_file=folder/"launch.json"
     if not launch_file.exists(): raise RuntimeError("no recorded launch")
@@ -629,7 +629,7 @@ def main():
             s=load_session(args.session)
             if args.command=="launch":
                 s['file_view']=CONFIG.get('file_view','native')
-                result=launch(s,args.mode)
+                result=launch_local_session(s,args.mode)
             elif args.command=="run":
                 try:
                     report=run_suite(s,args.require_background,args.require_minimized)
@@ -649,4 +649,47 @@ def main():
         print(str(exc),file=sys.stderr);return 1
 
 
-if __name__=="__main__":raise SystemExit(main())
+
+
+
+def shutdown(session):
+    from session_lifecycle import cleanup_owned
+    return cleanup_owned(session,shutdown_native)
+
+def launch_local_session(session,mode):
+    from session_lifecycle import begin_launch,mark_phase
+    begin_launch(session)
+    if mode!='lan':
+        mark_phase(session,'starting');result=launch(session,mode)
+        if result.get('ok'):mark_phase(session,'ready')
+        return result
+    from desktop_probe import probe,require_lan_desktop
+    from lan_startup_guard import startup_lease,local_products,require_no_products
+    from lan_discovery import LocalDiscovery
+    from owned_bootstrap import OwnedBootstrap
+    from owned_network import udp_ports
+    bootstrap=OwnedBootstrap(session['ipc'],session['session'],lan_ready=lambda pid:bool(udp_ports(pid)))
+    original_log=lan_support.host_log
+    def observed_log(active_session):
+        bootstrap.tick()
+        return original_log(active_session)
+    desktop=probe();save_json(Path(session['folder'])/'desktop-preflight.json',desktop)
+    require_lan_desktop(desktop)
+    environment=doctor()
+    with startup_lease(environment['game_directory']):
+        products=local_products()
+        save_json(Path(session['folder'])/'lan-isolation-preflight.json',{'competing_products':products})
+        require_no_products(products)
+        discovery=LocalDiscovery(session);original=lan_support.start_host
+        lan_support.start_host=lambda *params:discovery.start_host(original,*params)
+        mark_phase(session,'starting')
+        lan_support.host_log=observed_log
+        try:
+            result=launch(session,mode)
+            if result.get('ok'):mark_phase(session,'ready')
+            return result
+        finally:
+            discovery.close();lan_support.start_host=original;lan_support.host_log=original_log
+
+if __name__=="__main__":
+    raise SystemExit(main())

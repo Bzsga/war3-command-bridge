@@ -31,9 +31,9 @@ class BackgroundProbe:
 
     def sample(self):
         hwnd=self.user.GetForegroundWindow();pid=ctypes.c_uint32()
-        if hwnd:self.user.GetWindowThreadProcessId(hwnd,ctypes.byref(pid))
+        query_ok=(not hwnd) or bool(self.user.GetWindowThreadProcessId(hwnd,ctypes.byref(pid)) and pid.value)
         self.samples.append({'elapsed_s':time.perf_counter()-self.started,'foreground_pid':pid.value,
-                             'game_foreground':pid.value==self.pid,'minimized':bool(self.user.IsIconic(self.window)),
+                             'game_foreground':pid.value==self.pid,'foreground_hwnd':int(hwnd or 0),'foreground_query_ok':query_ok,'minimized':bool(self.user.IsIconic(self.window)),
                              'game_window_exists':bool(self.user.IsWindow(self.window))})
 
     def geometry(self):
@@ -66,7 +66,8 @@ class BackgroundProbe:
         return {'sample_interval_ms':50,'sample_count':len(samples),'duration_s':samples[-1]['elapsed_s'],
                 'game_pid':self.pid,'game_hwnd':self.window,
                 'foreground_samples':sum(s['game_foreground'] for s in samples),
-                'unknown_foreground_samples':sum(s['foreground_pid']==0 for s in samples),
+                'unknown_foreground_samples':sum(not s['foreground_query_ok'] for s in samples),
+                'no_foreground_window_samples':sum(s['foreground_hwnd']==0 for s in samples),
                 'minimized_samples':sum(s['minimized'] for s in samples),
                 'missing_window_samples':sum(not s['game_window_exists'] for s in samples),
                 'max_sample_gap_ms':max((b['elapsed_s']-a['elapsed_s'])*1000 for a,b in zip(samples,samples[1:])),

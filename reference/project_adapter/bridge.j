@@ -125,7 +125,7 @@ function ZJB_Activate takes nothing returns nothing
     local integer p=GetPlayerId(GetLocalPlayer())+1
     local integer id=ZJB_Control
     set ZJB_Accepted=false
-    if not ZJ_Ready or RuntimeFault or MPCount!=1 or p<1 or p>4 or not MPActive[p] then
+    if not ZJ_Ready or RuntimeFault or MPCount<1 or MPCount>ZJB_HumanLimit or p<1 or p>4 or not MPActive[p] then
         return
     endif
     if id<1 or id>327 or not UIEnabled[id] then
@@ -153,7 +153,7 @@ function ZJB_Init takes nothing returns nothing
     call PauseTimer(clock)
     call DestroyTimer(clock)
     set clock=null
-    if RuntimeFault or MPCount!=1 then
+    if RuntimeFault or MPCount!=ZJB_HumanLimit then
         call ZJB_Mark("blocked","fault="+ZJB_Bool(RuntimeFault)+" players="+I2S(MPCount))
         return
     endif

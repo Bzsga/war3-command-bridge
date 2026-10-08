@@ -18,15 +18,20 @@ DEFAULT_SHARED=Path(__file__).resolve().parents[2]/'runtime'
 def shared_module(path):
     path=path.resolve()
     sys.path.insert(0,str(path))
-    spec=importlib.util.spec_from_file_location('zjb_shared_transport',path/'war3_bridge.py')
+    owned_runtime=HERE/'native-runtime'
+    implementation=owned_runtime/'war3_bridge.py' if (owned_runtime/'war3_bridge.py').exists() else path/'war3_bridge.py'
+    if implementation.parent==owned_runtime:sys.path.insert(0,str(owned_runtime.resolve()))
+    spec=importlib.util.spec_from_file_location('zjb_shared_transport',implementation)
     module=importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if (owned_runtime/'KkweLuaHost.exe').exists():module.ROOT=owned_runtime.resolve()
     return module
 
 def save(path,value):
     path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 
-def prepare(out,shared):
+def prepare(out,shared,human_limit=1):
+    if human_limit not in (1,2):raise ValueError('Bridge currently supports one or two controlled humans')
     import winreg
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER,r'Software\Blizzard Entertainment\Warcraft III') as key:
         game=Path(os.environ.get('WAR3_BRIDGE_GAME') or winreg.QueryValueEx(key,'InstallPath')[0])
@@ -52,12 +57,14 @@ def prepare(out,shared):
     integer ZJB_Scene=0
     integer ZJB_SceneSerial=0
 '''
+    globals_text+='    integer ZJB_HumanLimit='+str(human_limit)+'\n'
     candidate=source.replace(anchor,anchor+'    call ExecuteFunc("ZJB_Start")\n',1)
     candidate=candidate.replace('globals\n','globals\n'+globals_text,1)
     candidate+='\n'+(HERE/'bridge.j').read_text(encoding='utf8').replace('__BUILD_TEXT__',build)
     (out/'source.j').write_text(candidate,encoding='utf8')
     module=shared_module(shared)
     lua=(HERE/'bridge.lua').read_text(encoding='utf8')
+    lua=lua.replace('__HUMAN_LIMIT__',str(human_limit))
     lua=lua.replace('__JSON_CODEC__',(shared/'src/json.lua').read_text(encoding='utf8'))
     for token,value in [('__SESSION__',session),('__BUILD__',build),('__IPC__',ipc_relative)]:
         lua=lua.replace(token,module.lua_string(value.encode('utf8')))
@@ -66,7 +73,7 @@ def prepare(out,shared):
     manifest={'session':session,'build':build,'folder':str(out),'ipc':str(game/ipc_relative),
               'map_source':str(map_path),'map_sha256':baseline['sha256'],'shared_bridge':str(shared.resolve()),
               'members':{'war3map.j':'compile/compiled.j','ZJCommandBridge.lua':'ZJCommandBridge.lua'},
-              'scope':'Single human test copy; no map generated and no runtime proof'}
+              'expected_clients':human_limit,'scope':str(human_limit)+' human test copy; no map generated and no runtime proof'}
     save(out/'session.json',manifest)
     return manifest
 
@@ -74,19 +81,23 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--shared',type=Path,default=DEFAULT_SHARED)
     sub=parser.add_subparsers(dest='command',required=True)
-    prep=sub.add_parser('prepare');prep.add_argument('--out',type=Path,required=True)
+    prep=sub.add_parser('prepare');prep.add_argument('--out',type=Path,required=True);prep.add_argument('--humans',type=int,choices=[1,2],default=1)
     attach=sub.add_parser('attach-ipc');attach.add_argument('--session',type=Path,required=True)
     request=sub.add_parser('request');request.add_argument('--session',type=Path,required=True)
     request.add_argument('--op',choices=['ping','snapshot','activate'],required=True)
     request.add_argument('--control',type=int);request.add_argument('--id')
     args=parser.parse_args()
     if args.command=='prepare':
-        result=prepare(args.out,args.shared)
+        result=prepare(args.out,args.shared,args.humans)
     else:
         session=json.loads(args.session.read_text(encoding='utf8'))
         if args.command=='attach-ipc':
             ipc=Path(session['ipc']);ipc.mkdir(parents=True,exist_ok=False)
             (ipc/'probe.txt').write_text(session['session'],encoding='ascii')
+            if session.get('expected_clients',1)>1:
+                for seat in range(1,session['expected_clients']+1):
+                    leaf=ipc/('seat-'+str(seat));leaf.mkdir()
+                    (leaf/'probe.txt').write_text(session['session'],encoding='ascii')
             result={'ipc':str(ipc),'attached':True}
         else:
             if args.op=='activate' and (args.control is None or not 1<=args.control<=327):

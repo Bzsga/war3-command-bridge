@@ -82,13 +82,15 @@ def _run(session_path,require_background=False):
     return report['passed']
 
 def run(session_path,require_background=False,keep_open=False):
+    from session_lifecycle import require_attachable,cleanup_owned
+    session=json.loads(session_path.read_text(encoding='utf8'))
     try:
+        require_attachable(session)
         return _run(session_path,require_background)
     finally:
         if not keep_open:
-            session=json.loads(session_path.read_text(encoding='utf8'))
-            shared_module(Path(session['shared_bridge'])).shutdown(session)
-            print('Owned War3 and LAN host closed; shutdown receipt saved',flush=True)
+            receipt=cleanup_owned(session,shared_module(Path(session['shared_bridge'])).shutdown)
+            print('Cleanup status: '+receipt['status']+'; shutdown receipt saved',flush=True)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--session',type=Path,required=True)

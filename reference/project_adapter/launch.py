@@ -10,6 +10,7 @@ from pathlib import Path
 import struct
 import sys
 import zlib
+from contextlib import nullcontext
 from bridge import shared_module,save
 
 def metadata(data):
@@ -30,7 +31,7 @@ def metadata(data):
     return {'w3i_version':25,'width':width,'height':height,'options':room['flags']&100,
             'slots':slots,'players':room['players'],'scope':'One human at Player(0); other human lobby slots closed'}
 
-def main():
+def _main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=['launch','shutdown'])
     parser.add_argument('--session',type=Path,required=True)
@@ -43,7 +44,15 @@ def main():
     session=json.loads(args.session.read_text(encoding='utf8'))
     shared=shared_module(Path(session['shared_bridge']))
     if args.command=='launch':
+        from session_lifecycle import begin_launch,mark_phase
+        begin_launch(session)
+        if session.get('expected_clients',1)!=1:
+            raise RuntimeError('Single-client launcher cannot satisfy this session; use the controlled multiplayer runner')
         if args.map is None:parser.error('launch requires --map')
+        if args.mode=='lan':
+            from desktop_probe import probe,require_lan_desktop
+            desktop=probe();save(args.session.parent/'desktop-preflight.json',desktop)
+            require_lan_desktop(desktop)
         candidate=args.map.resolve()
         report=json.loads(candidate.with_suffix(candidate.suffix+'.report.json').read_text(encoding='utf8'))
         if not report['ok'] or report['source_sha256']!=session['map_sha256']:
@@ -52,8 +61,9 @@ def main():
         if hashlib.sha256(candidate.read_bytes()).hexdigest()!=report['output_sha256']:
             raise RuntimeError('Candidate changed after verification')
         environment=shared.doctor()
+        save(args.session.parent/'launch-preflight.json',environment)
         if not environment['ok']:raise RuntimeError(json.dumps(environment,ensure_ascii=False))
-        if environment['running_games']:raise RuntimeError('Another War3 session is running')
+        if environment['running_games']:raise RuntimeError('Another War3 session is running; see launch-preflight.json for identity')
         session['map']=str(candidate);session['launch_map']=str(candidate)
         session['environment']=environment
         save(args.session,session)
@@ -87,9 +97,56 @@ def main():
                 save(path.parent/'config-evidence.json',config)
                 return config
             shared.lan_support.configure=configure_client_view
-        result=shared.launch(session,args.mode)
+        if args.mode=='lan':
+            import time
+            read_log=shared.lan_support.host_log;desktop_samples=[];last_sample=0
+            from owned_bootstrap import OwnedBootstrap
+            from owned_network import udp_ports
+            bootstrap=OwnedBootstrap(session['ipc'],session['session'],lan_ready=lambda pid:bool(udp_ports(pid)))
+            def observed_host_log(active_session):
+                nonlocal last_sample
+                bootstrap.tick()
+                if time.monotonic()-last_sample>=1:
+                    last_sample=time.monotonic();state=probe();state['monotonic']=last_sample
+                    desktop_samples.append(state)
+                    save(args.session.parent/'desktop-startup.json',{'samples':desktop_samples,'scope':'Startup only; not whole-batch background evidence'})
+                return read_log(active_session)
+            shared.lan_support.host_log=observed_host_log
+        if args.mode=='lan':
+            from lan_startup_guard import startup_lease,local_products,require_no_products
+            lease=startup_lease(environment['game_directory'])
+        else:lease=nullcontext()
+        with lease:
+            if args.mode=='lan':
+                products=local_products()
+                save(args.session.parent/'lan-isolation-preflight.json',{'competing_products':products,'scope':'Local games/ydhost only; remote LAN rooms not checked'})
+                require_no_products(products)
+            if args.mode=='lan':
+                from lan_discovery import LocalDiscovery
+                discovery=LocalDiscovery(session);start_host=shared.lan_support.start_host
+                shared.lan_support.start_host=lambda *params:discovery.start_host(start_host,*params)
+                mark_phase(session,'starting')
+                try:result=shared.launch(session,args.mode)
+                finally:discovery.close()
+            else:
+                mark_phase(session,'starting');result=shared.launch(session,args.mode)
+            if result.get('ok'):mark_phase(session,'ready')
     else:
-        result=shared.shutdown(session)
+        from session_lifecycle import cleanup_owned
+        result=cleanup_owned(session,shared.shutdown)
     print(json.dumps(result,ensure_ascii=False,indent=2))
+
+def main():
+    # Keep failure diagnostics outside the operation so they also cover preflight.
+    parser=argparse.ArgumentParser(add_help=False)
+    parser.add_argument('command',nargs='?');parser.add_argument('--session',type=Path)
+    args,_=parser.parse_known_args()
+    try:return _main()
+    finally:
+        if args.command=='launch' and args.session and args.session.exists():
+            from startup_diagnostics import write_diagnostics
+            try:write_diagnostics(json.loads(args.session.read_text(encoding='utf8')))
+            except Exception as error:
+                save(args.session.parent/'diagnostic-error.json',{'error':str(error)})
 
 if __name__=='__main__':main()
