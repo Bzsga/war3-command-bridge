@@ -2,6 +2,12 @@
 
 通过固定命令驱动真实游戏逻辑，读取状态并自动判断测试结果，减少重复启动、手动操作和等待。适用于 Warcraft III 地图的快速复现与行为回归。
 
+## 可视化地图测试工作台
+
+新增 [desktop-workbench](desktop-workbench/README.md)：中文Windows桌面工具，支持作者自定义命令、状态、标签与自动化用例；可选DeepSeek等兼容接口辅助接入，已有用例运行无需模型在线。
+
+[下载工作台0.1桌面包](https://github.com/Bzsga/war3-command-bridge/releases/tag/desktop-workbench-v0.1.0)。源码、使用方式与实际验证范围在子项目中独立维护；原命令桥CLI和v1.1.0发行入口保留。
+
 ## 两种使用方式
 
 | 目标 | 入口 |

@@ -1,0 +1,38 @@
+{
+  "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+  "build": "wbt-9ee736d1d1b2",
+  "archive": {
+    "ok": true,
+    "source_files": 19,
+    "files": 20,
+    "named_payloads_unchanged": 17,
+    "script_readback": true,
+    "index_names_preserved": true,
+    "listfile_reserialized": true
+  },
+  "map_unchanged": true,
+  "player_name_restored": true,
+  "launch": true,
+  "cleanup": {
+    "ok": true,
+    "closed": [
+      {
+        "pid": 23428,
+        "parent": 23124,
+        "path": null,
+        "command": null,
+        "created": "2026-10-09T07:59:10.2138580Z"
+      }
+    ],
+    "method": "KKWE retained process handle",
+    "host_closed": {
+      "pid": 18176,
+      "exit_code": 0,
+      "owned_handle": true
+    },
+    "evidence": "${LOCAL_VALIDATION_PATH}/ipc-evidence",
+    "finished_at": "2026-10-09T07:59:54.776755+00:00",
+    "status": "closed",
+    "runtime_copy_removed": true
+  }
+}

@@ -11,3 +11,7 @@
 ## 视频增强与 MIX 管理器
 
 视频工具已迁移至独立仓库 https://github.com/Bzsga/war3-video-mix 。命令桥当前版本不再携带视频工具源码或发行包，保留工程经验和迁移入口。
+
+## 桌面工作台子项目
+
+`desktop-workbench/`保存工作台源码和自建宿主源码；Windows发行包在独立Release，包含本次编译的宿主和动态Qt/Python运行库。上述命令桥源码包边界不扩大为桌面附件不含运行库；桌面组件许可见子项目NOTICE.md及docs/licenses。游戏与KKWE组件仍由使用者提供。

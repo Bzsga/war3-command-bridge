@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "ui_constructed": true,
+  "worker_executed": true,
+  "python_executable": "${LOCAL_VALIDATION_PATH}/War3TestWorkbench.exe",
+  "environment": {
+    "ok": false,
+    "game_directory": "${LOCAL_VALIDATION_PATH}/Warcraft III Frozen Throne",
+    "game_version": "1.27.0.52240",
+    "kkwe_directory": "${LOCAL_VALIDATION_PATH}/UNCONFIGURED_KKWE",
+    "missing": [
+      "${LOCAL_VALIDATION_PATH}/YDWEConfig.exe",
+      "${LOCAL_VALIDATION_PATH}/yd_loader.dll",
+      "${LOCAL_VALIDATION_PATH}/yd_lua_engine.dll",
+      "unconfigured.w3x",
+      "${LOCAL_VALIDATION_PATH}/pjass-latest.exe",
+      "${LOCAL_VALIDATION_PATH}/common.j",
+      "${LOCAL_VALIDATION_PATH}/blizzard.j",
+      "${LOCAL_VALIDATION_PATH}/luacore.dll",
+      "${LOCAL_VALIDATION_PATH}/sys.dll",
+      "${LOCAL_VALIDATION_PATH}/filesystem.dll",
+      "${LOCAL_VALIDATION_PATH}/maphash.dll",
+      "${LOCAL_VALIDATION_PATH}/ydhost.exe",
+      "${LOCAL_VALIDATION_PATH}/w3x2lni-lua.exe"
+    ],
+    "allow_local_files": true,
+    "running_games": [],
+    "runtime_capabilities": "require real-game bootstrap"
+  }
+}

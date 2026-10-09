@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=8,<10
+PyInstaller>=6,<7
+Nuitka==4.2.2
+ordered-set>=4,<5
+zstandard>=0.22,<1

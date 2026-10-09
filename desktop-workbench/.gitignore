@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+release*/
+deployment*/
+pysidedeploy.spec
+vendor/runtime/KkweLuaHost.exe
+*.w3x
+*.w3m
+config.json
+active-session.json
+engine/
+jobs/
+reports/
+credentials/

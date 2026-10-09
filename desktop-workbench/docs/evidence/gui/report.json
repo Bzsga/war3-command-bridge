@@ -1,0 +1,300 @@
+{
+  "schema": 1,
+  "id": "253e436aa866411687debe1a9b2c2281",
+  "started_at": "2026-10-09T08:00:58.094094+00:00",
+  "session": "43f1d2f65ebb4ca483dfec25022adfda",
+  "build": "wbt-43f1d2f65ebb",
+  "status": "passed",
+  "cases": [
+    {
+      "id": "author_behavior",
+      "name": "正常、条件边界与请求去重",
+      "tags": [],
+      "status": "passed",
+      "steps": [
+        {
+          "index": 1,
+          "definition": {
+            "type": "command",
+            "op": "reset",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "264746ad458242daaf27cf7ae090d740",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "condition_passed": true,
+            "dispatched": true,
+            "id": "264746ad458242daaf27cf7ae090d740",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 0,
+              "ticks": 90
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 60.97730000328738
+          },
+          "elapsed_ms": 2969.0
+        },
+        {
+          "index": 2,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 0
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 0,
+          "expected": 0,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 3,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {},
+            "request_id": "dedup"
+          },
+          "status": "passed",
+          "request_id": "9116ba092a2e4418ad3bc28e530a90c2",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "condition_passed": true,
+            "dispatched": true,
+            "id": "9116ba092a2e4418ad3bc28e530a90c2",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 1,
+              "ticks": 120
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 56.4533000033407
+          },
+          "elapsed_ms": 1953.0
+        },
+        {
+          "index": 4,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 1
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 1,
+          "expected": 1,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 5,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {},
+            "request_id": "dedup"
+          },
+          "status": "passed",
+          "request_id": "9116ba092a2e4418ad3bc28e530a90c2",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "condition_passed": true,
+            "dispatched": true,
+            "id": "9116ba092a2e4418ad3bc28e530a90c2",
+            "ok": true,
+            "replayed": true,
+            "result": {
+              "count": 1,
+              "ticks": 120
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 70.45739999739453
+          },
+          "elapsed_ms": 1844.0
+        },
+        {
+          "index": 6,
+          "definition": {
+            "type": "command",
+            "op": "snapshot",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "e42feddab30f44db8878149464c36725",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "dispatched": false,
+            "id": "e42feddab30f44db8878149464c36725",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 1,
+              "ticks": 155
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 38.81999999794061
+          },
+          "elapsed_ms": 359.0
+        },
+        {
+          "index": 7,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 1
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 1,
+          "expected": 1,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 8,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "22fa8a53d365473086f63b966e94d297",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "condition_passed": true,
+            "dispatched": true,
+            "id": "22fa8a53d365473086f63b966e94d297",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 2,
+              "ticks": 161
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 56.6103999990446
+          },
+          "elapsed_ms": 391.0
+        },
+        {
+          "index": 9,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 2
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 2,
+          "expected": 2,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 10,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "f852997ef96747c9bdbfabe9fab12e8a",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "condition_passed": false,
+            "dispatched": true,
+            "id": "f852997ef96747c9bdbfabe9fab12e8a",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 2,
+              "ticks": 167
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 55.310700001427904
+          },
+          "elapsed_ms": 391.0
+        },
+        {
+          "index": 11,
+          "definition": {
+            "type": "command",
+            "op": "snapshot",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "3b8e7015c57d40eb9d1933ca50f9845f",
+          "response": {
+            "build": "wbt-43f1d2f65ebb",
+            "dispatched": false,
+            "id": "3b8e7015c57d40eb9d1933ca50f9845f",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 2,
+              "ticks": 173
+            },
+            "session": "43f1d2f65ebb4ca483dfec25022adfda",
+            "elapsed_ms": 50.39019999821903
+          },
+          "elapsed_ms": 360.0
+        },
+        {
+          "index": 12,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 2
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 2,
+          "expected": 2,
+          "elapsed_ms": 0.0
+        }
+      ],
+      "elapsed_ms": 8297.0
+    }
+  ],
+  "coverage": {
+    "real_game": true,
+    "visual": false,
+    "audio": false,
+    "mouse_hit": false,
+    "multiplayer": false
+  },
+  "cleanup": {
+    "ok": true,
+    "closed": [
+      {
+        "pid": 18840,
+        "parent": 22860,
+        "path": null,
+        "command": null,
+        "created": "2026-10-09T08:00:27.1288900Z"
+      }
+    ],
+    "method": "KKWE retained process handle",
+    "host_closed": {
+      "pid": 18888,
+      "exit_code": 0,
+      "owned_handle": true
+    },
+    "evidence": "${LOCAL_VALIDATION_PATH}/ipc-evidence",
+    "finished_at": "2026-10-09T08:01:12.985504+00:00",
+    "status": "closed",
+    "runtime_copy_removed": true
+  },
+  "elapsed_ms": 14922.0,
+  "finished_at": "2026-10-09T08:01:13.014509+00:00"
+}

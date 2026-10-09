@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "id": "c081b72a2dc54d9297b2346f1457bd8a",
+  "started_at": "2026-10-09T07:59:41.900146+00:00",
+  "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+  "build": "wbt-9ee736d1d1b2",
+  "status": "passed",
+  "cases": [
+    {
+      "id": "author_behavior",
+      "name": "正常、条件边界与请求去重",
+      "tags": [],
+      "status": "passed",
+      "steps": [
+        {
+          "index": 1,
+          "definition": {
+            "type": "command",
+            "op": "reset",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "e5d7e92911564e2d83cf5805523e6d2a",
+          "response": {
+            "build": "wbt-9ee736d1d1b2",
+            "dispatched": true,
+            "id": "e5d7e92911564e2d83cf5805523e6d2a",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 0,
+              "ticks": 80
+            },
+            "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+            "elapsed_ms": 80.26819999940926
+          },
+          "elapsed_ms": 1922.0
+        },
+        {
+          "index": 2,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 0
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 0,
+          "expected": 0,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 3,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {
+              "amount": 1
+            },
+            "request_id": "dedup"
+          },
+          "status": "passed",
+          "request_id": "8d0507120e36491bab60bacfd40b57de",
+          "response": {
+            "build": "wbt-9ee736d1d1b2",
+            "dispatched": true,
+            "id": "8d0507120e36491bab60bacfd40b57de",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 1,
+              "ticks": 108
+            },
+            "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+            "elapsed_ms": 35.52459999991697
+          },
+          "elapsed_ms": 1734.0
+        },
+        {
+          "index": 4,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 1
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 1,
+          "expected": 1,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 5,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {
+              "amount": 1
+            },
+            "request_id": "dedup"
+          },
+          "status": "passed",
+          "request_id": "8d0507120e36491bab60bacfd40b57de",
+          "response": {
+            "build": "wbt-9ee736d1d1b2",
+            "dispatched": true,
+            "id": "8d0507120e36491bab60bacfd40b57de",
+            "ok": true,
+            "replayed": true,
+            "result": {
+              "count": 1,
+              "ticks": 108
+            },
+            "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+            "elapsed_ms": 10.290300000633579
+          },
+          "elapsed_ms": 1781.0
+        },
+        {
+          "index": 6,
+          "definition": {
+            "type": "command",
+            "op": "snapshot",
+            "args": {}
+          },
+          "status": "passed",
+          "request_id": "f94f7f4b13a64b9387710b08d3f85191",
+          "response": {
+            "build": "wbt-9ee736d1d1b2",
+            "dispatched": false,
+            "id": "f94f7f4b13a64b9387710b08d3f85191",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 1,
+              "ticks": 143
+            },
+            "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+            "elapsed_ms": 54.96169999969425
+          },
+          "elapsed_ms": 391.0
+        },
+        {
+          "index": 7,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 1
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 1,
+          "expected": 1,
+          "elapsed_ms": 0.0
+        },
+        {
+          "index": 8,
+          "definition": {
+            "type": "command",
+            "op": "apply",
+            "args": {
+              "amount": -1
+            }
+          },
+          "status": "passed",
+          "request_id": "ee080b6891b141c4a4c17fb6954b69f0",
+          "response": {
+            "build": "wbt-9ee736d1d1b2",
+            "dispatched": true,
+            "id": "ee080b6891b141c4a4c17fb6954b69f0",
+            "ok": true,
+            "replayed": false,
+            "result": {
+              "count": 1,
+              "ticks": 149
+            },
+            "session": "9ee736d1d1b2451d888b2ad66dab3ec2",
+            "elapsed_ms": 69.30999999894993
+          },
+          "elapsed_ms": 391.0
+        },
+        {
+          "index": 9,
+          "definition": {
+            "type": "assert",
+            "path": "last.count",
+            "operator": "eq",
+            "value": 1
+          },
+          "status": "passed",
+          "path": "last.count",
+          "operator": "eq",
+          "actual": 1,
+          "expected": 1,
+          "elapsed_ms": 0.0
+        }
+      ],
+      "elapsed_ms": 6235.0
+    }
+  ],
+  "coverage": {
+    "real_game": true,
+    "visual": false,
+    "audio": false,
+    "mouse_hit": false,
+    "multiplayer": false
+  },
+  "cleanup": {
+    "ok": true,
+    "closed": [
+      {
+        "pid": 23428,
+        "parent": 23124,
+        "path": null,
+        "command": null,
+        "created": "2026-10-09T07:59:10.2138580Z"
+      }
+    ],
+    "method": "KKWE retained process handle",
+    "host_closed": {
+      "pid": 18176,
+      "exit_code": 0,
+      "owned_handle": true
+    },
+    "evidence": "${LOCAL_VALIDATION_PATH}/ipc-evidence",
+    "finished_at": "2026-10-09T07:59:54.776755+00:00",
+    "status": "closed",
+    "runtime_copy_removed": true
+  },
+  "elapsed_ms": 12907.0,
+  "finished_at": "2026-10-09T07:59:54.805758+00:00"
+}
