@@ -136,7 +136,7 @@ KKWE 日志明确显示：编辑器会加载游戏根目录的 War3Video.mix。�
 
 ## 2026-10-09：v1.0.0 源码与发行包
 
-[源码及下载](../tools/war3-video/README.md)已补充。管理器支持为 KKWE/YDWE 安装及卸载触发器动作，界面明确作者制作 MIX 与玩家仅放置包的区别。
+[源码及下载](https://github.com/Bzsga/war3-video-mix)已补充。管理器支持为 KKWE/YDWE 安装及卸载触发器动作，界面明确作者制作 MIX 与玩家仅放置包的区别。
 
 用户双开日志定位到另一个窗口以 local-skip 停止，而指定窗口是 map-stop：播放器全局 ESC 监听与地图键盘事件冲突。最新版本取消隐式 ESC 跳过，停止由地图动作控制。两个原生窗口夹具加载实际 MIX 后，指定停止一端而另一端音频继续；本次未重新开启真实 LAN 局。版本元数据与 UI 变更通过编译及正常/最小窗口检查。
 
@@ -146,4 +146,8 @@ KKWE 日志明确显示：编辑器会加载游戏根目录的 War3Video.mix。�
 
 备注明确为“注：从未使用过任何外置包的作者/玩家可能需要安装注册表”。链接先显示确认，再调用 Windows 打开 HKCU Warcraft III 的 Allow Local Files=1 注册表导入窗口，不静默修改。原始注册表已内嵌并随便携包提供；验证了链接点击、确认提示与取消不导入，未执行实际 Windows 导入。
 
-[最新源码、说明和下载](../tools/war3-video/README.md)。本次没有新跑 LAN，不能把工作流验证作为新的多人游戏兼容结论。
+[最新源码、说明和下载](https://github.com/Bzsga/war3-video-mix)。本次没有新跑 LAN，不能把工作流验证作为新的多人游戏兼容结论。
+
+## 仓库迁移
+
+视频工具独立维护于 [Bzsga/war3-video-mix](https://github.com/Bzsga/war3-video-mix)。本文作为命令桥相关测试经验保留，最新视频源码、软件与说明见独立仓库。

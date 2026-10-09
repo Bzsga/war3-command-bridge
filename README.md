@@ -36,7 +36,7 @@ python -X utf8 -B runtime/war3_bridge.py run
 - [多人接入](docs/MULTIPLAYER.md)：实例隔离、发现端口和同步验证。
 - [故障排查](docs/TROUBLESHOOTING.md)：按启动阶段定位失败。
 - [验证范围](VALIDATION.md)：已经证明的能力与迁移后需要重测的部分。
-- [视频增强与 MIX 管理器 v1.1.2](tools/war3-video/README.md)：源码、便携下载、编辑器触发器安装/卸载与指定玩家播放。
+- [视频增强与 MIX 管理器](https://github.com/Bzsga/war3-video-mix)：已迁移至独立仓库，包含源码、下载与使用说明。
 - [视频播放工程经验](docs/war3-video-mix-lessons.md)：MIX 分发、进程隔离、媒体生命周期与验证边界。
 - [给 AI 助手](AI_HANDOFF.md)：推荐工作顺序。
 

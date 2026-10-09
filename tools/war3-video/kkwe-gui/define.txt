@@ -1,6 +1,0 @@
-[TriggerCategories]
-TC_War3Video=视频播放,ReplaceableTextures\CommandButtons\BTNPeasant.blp
-
-[TriggerTypes]
-
-[TriggerParams]
