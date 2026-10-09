@@ -36,7 +36,8 @@ python -X utf8 -B runtime/war3_bridge.py run
 - [多人接入](docs/MULTIPLAYER.md)：实例隔离、发现端口和同步验证。
 - [故障排查](docs/TROUBLESHOOTING.md)：按启动阶段定位失败。
 - [验证范围](VALIDATION.md)：已经证明的能力与迁移后需要重测的部分。
-- [可选视频播放经验](docs/war3-video-mix-lessons.md)：MIX 分发、进程隔离与媒体生命周期；仅提供经验，不含视频插件。
+- [视频增强与 MIX 管理器 v1.0.0](tools/war3-video/README.md)：源码、便携下载、编辑器触发器安装/卸载与指定玩家播放。
+- [视频播放工程经验](docs/war3-video-mix-lessons.md)：MIX 分发、进程隔离、媒体生命周期与验证边界。
 - [给 AI 助手](AI_HANDOFF.md)：推荐工作顺序。
 
 `runtime` 提供单人演示及通用基础组件；`examples/demo_batch.py` 是可运行的批次适配示例；`skills/war3-testing` 可独立安装为技能。包内不含任何特定地图的控件编号、养成系统、关卡流程或构建入口。
